@@ -198,7 +198,7 @@ class Scanner:
             "-silent"
         ])
     
-    
+
     # +----------- ORQUESTRATORS --------------+
 
     def manage_dependencies(self):
@@ -252,6 +252,15 @@ class Scanner:
             except Exception as e:
                 print(f"[ERROR] {name} failed: {e}")
         
+    def process_subdomains_to_ip(self):
+        with open(self.alive_domains_path, "r") as f:
+            domains = [line.strip() for line in f if line.strip()]
+        
+        ips = domains_to_ip(domains)
+
+        with open(os.path.join(self.scan_directory_path, "alive_ips.txt"), "w") as f:
+            for line in ips:
+                f.write(line + "\n")
 
 
 if __name__ == "__main__":
@@ -265,3 +274,4 @@ if __name__ == "__main__":
         scanner.run_scan()
         scanner.process_all_subdomains()
         scanner.run_httpx()
+        scanner.process_subdomains_to_ip()
