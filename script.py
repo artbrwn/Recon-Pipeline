@@ -205,13 +205,21 @@ class Scanner:
         """
         Creates all repositories and obtains needed external files
         """
+        tools = [
+            ("Obtain valid resolvers", self.obtain_valid_resolvers),
+            ("Obtain DNS wordlists", self.obtain_dns_wordlist)
+        ]
+        
         lists_already_existed = self.create_repositories()
         self.valid_resolvers_path = os.path.join(self.lists_path, "valid_resolvers.txt")
         self.wordlist_path = os.path.join(self.lists_path, "dns_wordlists.txt")
         if not lists_already_existed:
-            self.obtain_valid_resolvers()
-            self.obtain_dns_wordlist()
-
+            for name, tool in tools:
+                try:
+                    tool()
+                except Exception as e:
+                    print(f"[ERROR] {name} failed: {e}")
+            
     def run_scan(self):
         """
         Runs all footprinting scan tools
