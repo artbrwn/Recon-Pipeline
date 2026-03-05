@@ -86,7 +86,8 @@ class Scanner:
             "-mcmd", "-s 3500",
             "-o", os.path.join(self.scan_directory_path, "shuffledns_output.txt"),
             "-silent"
-            ])
+            ],
+            check=True)
             
         print("----- ShuffleDNS executed -----")
 
@@ -101,7 +102,8 @@ class Scanner:
                                                         "--url",
                                                         self.target],
                                                         capture_output=True,
-                                                        text=True
+                                                        text=True,
+                                                        check=True
                                                         )
         
         write_results_file(analyticsrelationships_results.stdout, os.path.join(self.scan_directory_path, "analyticsreltionships_output.txt"))
@@ -121,7 +123,8 @@ class Scanner:
                                         "cero", 
                                         "-d"] + targets,
                                         capture_output=True,
-                                        text=True
+                                        text=True,
+                                        check=True
                                         )
         
         write_results_file(cero_results.stdout, os.path.join(self.scan_directory_path, "cero_output.txt"))
@@ -139,7 +142,8 @@ class Scanner:
                                         "ctfr", 
                                         "-d", self.target],
                                         capture_output=True,
-                                        text=True
+                                        text=True,
+                                        check=True
                                         )
         
         write_results_file(cero_results.stdout, os.path.join(self.scan_directory_path, "ctfr_output.txt"))
@@ -158,17 +162,26 @@ class Scanner:
                         self.target,
                         "--o", os.path.join(self.scan_directory_path, "gau_output.txt")],
                         capture_output=True,
-                        text=True
+                        text=True,
+                        check=True
                         )
         
         print("----- gau executed -----")    
 
     def run_scan(self):
-        self.run_shuffledns()
-        self.run_analyticsrelationships()
-        self.run_cero()
-        self.run_ctfr()
-        self.run_gau()
+        tools = [
+        ("ShuffleDNS", self.run_shuffledns),
+        ("AnalyticsRelationships", self.run_analyticsrelationships),
+        ("Cero", self.run_cero),
+        ("CTFR", self.run_ctfr),
+        ("gau", self.run_gau)
+        ]
+
+        for name, tool in tools:
+            try:
+                tool()
+            except Exception as e:
+                print(f"[ERROR] {name} failed: {e}")
 
     # +------------ PROCESS RESULT FILES ---------------+
 
