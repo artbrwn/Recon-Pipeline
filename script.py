@@ -198,6 +198,17 @@ class Scanner:
             "-silent"
         ])
     
+    def run_masscan(self):
+        """
+        sudo masscan -p21,22,80,443,8080 -iL subdominios_vivos_ip.txt > output_masscan.txt
+        """
+
+        subprocess.run(["masscan",
+                        "-p21,22,80,443,8080",
+                        "-iL", self.alive_ips_path,
+                        "-oL", os.path.join(self.scan_directory_path, "masscan_output.txt")], 
+                       check=True)
+        
 
     # +----------- ORQUESTRATORS --------------+
 
@@ -257,8 +268,8 @@ class Scanner:
             domains = [line.strip() for line in f if line.strip()]
         
         ips = domains_to_ip(domains)
-
-        with open(os.path.join(self.scan_directory_path, "alive_ips.txt"), "w") as f:
+        self.alive_ips_path = os.path.join(self.scan_directory_path, "alive_ips.txt")
+        with open(self.alive_domains_path, "w") as f:
             for line in ips:
                 f.write(line + "\n")
 
@@ -275,3 +286,4 @@ if __name__ == "__main__":
         scanner.process_all_subdomains()
         scanner.run_httpx()
         scanner.process_subdomains_to_ip()
+        scanner.run_masscan()
