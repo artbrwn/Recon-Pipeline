@@ -9,17 +9,12 @@ class Scanner:
     def __init__(self, target):
         self.target = target
 
-    # +---------- MANAGE DEPENDENCIES -----------+
-    def manage_dependencies(self):
-        lists_already_existed = self.create_folders()
-        self.valid_resolvers_path = os.path.join(self.lists_path, "valid_resolvers.txt")
-        self.wordlist_path = os.path.join(self.lists_path, "dns_wordlists.txt")
-        if not lists_already_existed:
-            self.obtain_valid_resolvers()
-            self.obtain_dns_wordlist()
+    # +---------- MANAGE DEPENDENCIES TOOLS -----------+
 
-    def create_folders(self):
-        print("Creating directory")
+    def create_repositories(self):
+        """
+        Creates needed repositories
+        """
         user = os.getenv('USER')
 
         # Create target directory
@@ -41,21 +36,16 @@ class Scanner:
             os.mkdir(self.lists_path)
             already_existed = False
         
-        print("Directory created")
         return already_existed 
 
     def obtain_valid_resolvers(self):
         """
         Get valid resolvers and save is in the valid_resolvers path
         """
-        print("Obtaining valid resolvers") 
-
         subprocess.run([
             "resolvalid",
             "-o",  self.valid_resolvers_path
-        ])
-
-        print("Valid resolvers list created")
+        ], check=True)
 
     def obtain_dns_wordlist(self):
         """
@@ -68,14 +58,12 @@ class Scanner:
             file.write(str(result.text))
 
 
-    # +------------ RUN TOOLS ---------------+
+    # +------------ FOOTPRINTING SCAN TOOLS ---------------+
 
     def run_shuffledns(self):
         """
         Executes shuffledns and saves its results.
         """
-        print("----- Executing ShuffleDNS -----")
-
         subprocess.run([
             "shuffledns",
             "-mode", "bruteforce",
@@ -89,14 +77,10 @@ class Scanner:
             ],
             check=True)
             
-        print("----- ShuffleDNS executed -----")
-
     def run_analyticsrelationships(self):
         """
         Executes analyticsrelationships tools and saves its results.
         """
-        print("----- Executing Analytics Relationships -----")
-
         analyticsrelationships_results = subprocess.run([
                                                         "analyticsrelationships", 
                                                         "--url",
@@ -108,14 +92,10 @@ class Scanner:
         
         write_results_file(analyticsrelationships_results.stdout, os.path.join(self.scan_directory_path, "analyticsreltionships_output.txt"))
 
-        print("----- Analytics Relationships executed -----")
-
     def run_cero(self):
         """
         Runs cero and saves its output
         """
-        print("----- Executing Cero -----")
-        
         with open(os.path.join(self.scan_directory_path, "shuffledns_output.txt"), "r") as file:
             targets = [line.strip() for line in file if line.strip()]
 
@@ -129,15 +109,10 @@ class Scanner:
         
         write_results_file(cero_results.stdout, os.path.join(self.scan_directory_path, "cero_output.txt"))
 
-        print("----- Cero executed -----")
-
     def run_ctfr(self):
         """
         Runs ctfr and saves its output
         """
-
-        print("----- Executing CTFR -----")
-
         cero_results = subprocess.run([
                                         "ctfr", 
                                         "-d", self.target],
@@ -148,14 +123,10 @@ class Scanner:
         
         write_results_file(cero_results.stdout, os.path.join(self.scan_directory_path, "ctfr_output.txt"))
 
-        print("----- CTFR executed -----")
-
     def run_gau(self):
         """
         Runs gau and saves its output
         """
-        print("----- Executing gau -----")
-
         subprocess.run([
                         "gau", 
                         "--threads", "5",
@@ -165,28 +136,11 @@ class Scanner:
                         text=True,
                         check=True
                         )
-        
-        print("----- gau executed -----")    
 
-    def run_scan(self):
-        tools = [
-        ("ShuffleDNS", self.run_shuffledns),
-        ("AnalyticsRelationships", self.run_analyticsrelationships),
-        ("Cero", self.run_cero),
-        ("CTFR", self.run_ctfr),
-        ("gau", self.run_gau)
-        ]
-
-        for name, tool in tools:
-            try:
-                tool()
-            except Exception as e:
-                print(f"[ERROR] {name} failed: {e}")
 
     # +------------ PROCESS RESULT FILES ---------------+
 
     def gather_all_subdomains(self):
-        print("+-------- GATHERING DOMAINS ------------+")
         all_files = os.listdir(self.scan_directory_path)
         txt_files = filter(lambda x: x[-4:] == ".txt", all_files)
 
@@ -199,10 +153,7 @@ class Scanner:
             for lst in all_subdomains:
                 f.writelines(lst)
 
-        print("+-------- DOMAINS GATHERED ------------+")
-
     def filter_unique_subdomains(self):
-        print("+-------- Filtering unique domains  ------------+")
         with open(os.path.join(self.scan_directory_path, "all_subdomains_unfiltered.txt"), "r") as f:
             all_subdomains = [line.strip() for line in f]
         
@@ -235,14 +186,9 @@ class Scanner:
             for line in clean_targets:
                 f.write(line + "\n")
         
-        print(f"+-------- unique domains filtered and saved in {self.unique_domains_path} ------------+")
 
-    def process_all_subdomains(self):
-        self.gather_all_subdomains()
-        self.filter_unique_subdomains()
+    # +----------- FINGERPRINTING TOOLS --------------+
 
-    
-    # ----------- FINGERPRINTING --------------
     def run_httpx(self):
         self.alive_domains_path = os.path.join(self.scan_directory_path, "alive_domains.txt")
         subprocess.run([
@@ -251,6 +197,54 @@ class Scanner:
             "-o", self.alive_domains_path,
             "-silent"
         ])
+    
+    
+    # +----------- ORQUESTRATORS --------------+
+
+    def manage_dependencies(self):
+        """
+        Creates all repositories and obtains needed external files
+        """
+        lists_already_existed = self.create_repositories()
+        self.valid_resolvers_path = os.path.join(self.lists_path, "valid_resolvers.txt")
+        self.wordlist_path = os.path.join(self.lists_path, "dns_wordlists.txt")
+        if not lists_already_existed:
+            self.obtain_valid_resolvers()
+            self.obtain_dns_wordlist()
+
+    def run_scan(self):
+        """
+        Runs all footprinting scan tools
+        """
+        tools = [
+        ("ShuffleDNS", self.run_shuffledns),
+        ("AnalyticsRelationships", self.run_analyticsrelationships),
+        ("Cero", self.run_cero),
+        ("CTFR", self.run_ctfr),
+        ("gau", self.run_gau)
+        ]
+
+        for name, tool in tools:
+            try:
+                tool()
+            except Exception as e:
+                print(f"[ERROR] {name} failed: {e}")
+    
+    def process_all_subdomains(self):
+        """
+        Processes all subdomains obtained through different footprinting techniques and provides a final all_subdomains_unfiltered.txt file.
+        """
+        tools = [
+            ("Gather all subdomains", self.gather_all_subdomains),
+            ("Obtain final list without duplicates", self.filter_unique_subdomains)
+        ]
+        for name, tool in tools:
+            try:
+                tool()
+            except Exception as e:
+                print(f"[ERROR] {name} failed: {e}")
+        
+
 
 if __name__ == "__main__":
     if sys.argv[1] == "update":
