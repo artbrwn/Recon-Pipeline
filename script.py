@@ -227,7 +227,9 @@ class Scanner:
         if not lists_already_existed:
             for name, tool in tools:
                 try:
+                    print(f"Executing {name}")
                     tool()
+                    print(f"Executed {name}")
                 except Exception as e:
                     print(f"[ERROR] {name} failed: {e}")
             
@@ -245,7 +247,9 @@ class Scanner:
 
         for name, tool in tools:
             try:
+                print(f"Executing {name}")
                 tool()
+                print(f"Executed {name}")
             except Exception as e:
                 print(f"[ERROR] {name} failed: {e}")
     
@@ -259,7 +263,9 @@ class Scanner:
         ]
         for name, tool in tools:
             try:
+                print(f"Executing {name}")
                 tool()
+                print(f"Executed {name}")
             except Exception as e:
                 print(f"[ERROR] {name} failed: {e}")
         
