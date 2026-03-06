@@ -15,7 +15,7 @@ class Scanner:
         """
         Creates needed repositories
         """
-        user = os.getenv('USER')
+        user = os.getenv('SUDO_USER')
 
         # Create target directory
         base_path = os.path.join("/home", user, "Desktop")
