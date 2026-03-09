@@ -232,6 +232,14 @@ class Scanner:
 
         write_results_file(wafw00f_result.stdout,  os.path.join(self.scan_directory_path, "wafw00f_output.txt"))
 
+    def run_unwaf(self):
+        """
+        Runs unwaf and saves its output
+        """
+        subprocess.run(["unwaf",
+                        "-l", self.alive_domains_path,
+                        "-o", os.path.join(self.scan_directory_path, "unwaf.txt")])
+
 
     # +----------- ORQUESTRATORS --------------+
 
@@ -302,6 +310,28 @@ class Scanner:
             for line in ips:
                 f.write(line + "\n")
 
+    def run_fingerprinting_scan(self):
+        """
+        Runs all fingerpinting tools
+        """
+        tools = [
+        ("Process all subdomains tool", self.process_all_subdomains),
+        ("HTTPx", self.run_httpx),
+        ("Process subdomains to IP tool", self.process_subdomains_to_ip),
+        ("Masscan", self.run_masscan),
+        ("Gowitness", self.run_gowitness),
+        ("Waf detector tool", self.run_wafw00f),
+        ("Unwaf tool", self.run_unwaf)
+        ]
+
+        for name, tool in tools:
+            try:
+                print(f"Executing {name}")
+                tool()
+                print(f"Executed {name}")
+            except Exception as e:
+                print(f"[ERROR] {name} failed: {e}")
+
 
 if __name__ == "__main__":
     if sys.argv[1] == "update":
@@ -312,7 +342,5 @@ if __name__ == "__main__":
         scanner = Scanner(sys.argv[1])
         scanner.manage_dependencies()
         scanner.run_footprinting_scan()
-        scanner.process_all_subdomains()
-        scanner.run_httpx()
-        scanner.process_subdomains_to_ip()
-        scanner.run_masscan()
+        scanner.run_fingerprinting_scan()
+        
