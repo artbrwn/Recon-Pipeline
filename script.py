@@ -200,7 +200,7 @@ class Scanner:
     
     def run_masscan(self):
         """
-        sudo masscan -p21,22,80,443,8080 -iL subdominios_vivos_ip.txt > output_masscan.txt
+        Runs basic masscan scan and saves its output
         """
 
         subprocess.run(["masscan",
@@ -233,7 +233,7 @@ class Scanner:
                 except Exception as e:
                     print(f"[ERROR] {name} failed: {e}")
             
-    def run_scan(self):
+    def run_footprinting_scan(self):
         """
         Runs all footprinting scan tools
         """
@@ -288,7 +288,7 @@ if __name__ == "__main__":
     else:
         scanner = Scanner(sys.argv[1])
         scanner.manage_dependencies()
-        scanner.run_scan()
+        scanner.run_footprinting_scan()
         scanner.process_all_subdomains()
         scanner.run_httpx()
         scanner.process_subdomains_to_ip()
