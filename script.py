@@ -209,6 +209,16 @@ class Scanner:
                         "-oL", os.path.join(self.scan_directory_path, "masscan_output.txt")], 
                        check=True)
         
+    def run_gowitness(self):
+        """
+        Runs gowitness and saves its output
+        """
+
+        subprocess.run(["gowitness",
+                        "scan file",
+                        "-f", self.alive_domains_path,
+                        "--write-db"])
+        
 
     # +----------- ORQUESTRATORS --------------+
 
