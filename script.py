@@ -217,8 +217,21 @@ class Scanner:
         subprocess.run(["gowitness",
                         "scan file",
                         "-f", self.alive_domains_path,
-                        "--write-db"])
+                        "--write-db"],
+                        check=True)
         
+    def run_wafw00f(self):
+        """
+        Runs wafw00f and saves its output
+        """
+        wafw00f_result = subprocess.run(["wafw00f",
+                        "-i", self.alive_domains_path],
+                        capture_output=True,
+                        text=True,
+                        check=True)
+
+        write_results_file(wafw00f_result.stdout,  os.path.join(self.scan_directory_path, "wafw00f_output.txt"))
+
 
     # +----------- ORQUESTRATORS --------------+
 
