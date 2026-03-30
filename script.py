@@ -308,7 +308,8 @@ class Scanner:
         self.alive_ips_path = os.path.join(self.scan_directory_path, "alive_ips.txt")
         with open(self.alive_domains_path, "w") as f:
             for line in ips:
-                f.write(line + "\n")
+                if line:
+                    f.write(line + "\n")
 
     def run_fingerprinting_scan(self):
         """
